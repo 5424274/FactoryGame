@@ -1,0 +1,53 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/world/world_grid.gd" id="1_map"]
+[ext_resource type="Script" path="res://scripts/world/camera_controller.gd" id="2_camera"]
+[ext_resource type="Script" path="res://scripts/placement/building_placement.gd" id="3_placement"]
+[ext_resource type="Texture2D" path="res://assets/textures/machines/test_building.png" id="4_building"]
+
+[node name="Main" type="Node2D"]
+
+[node name="WorldGrid" type="Node2D" parent="."]
+script = ExtResource("1_map")
+
+[node name="Buildings" type="Node2D" parent="."]
+z_index = 1
+
+[node name="BuildingPlacement" type="Node2D" parent="."]
+z_index = 2
+script = ExtResource("3_placement")
+grid_path = NodePath("../WorldGrid")
+buildings_path = NodePath("../Buildings")
+building_texture = ExtResource("4_building")
+
+[node name="Camera" type="Camera2D" parent="."]
+position = Vector2(640, 360)
+position_smoothing_enabled = true
+position_smoothing_speed = 12.0
+script = ExtResource("2_camera")
+
+[node name="Interface" type="CanvasLayer" parent="."]
+
+[node name="HelpPanel" type="ColorRect" parent="Interface"]
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 590.0
+offset_bottom = 236.0
+color = Color(0.027, 0.055, 0.075, 0.88)
+mouse_filter = 2
+
+[node name="HelpText" type="Label" parent="Interface/HelpPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 10.0
+offset_right = -16.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.83, 0.94, 1, 1)
+theme_override_font_sizes/font_size = 22
+text = "W / A / S / D：移动视角\n按住鼠标中键：拖动地图；滚轮：缩放\n左键：放置 1×1 测试建筑（可连续放置）\n右键 / Esc：取消放置；B：重新进入放置模式\n绿色预览：可放置；红色预览：网格已占用\n32 × 32 像素网格，共 160 × 90 格"
+vertical_alignment = 1

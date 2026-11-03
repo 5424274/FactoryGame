@@ -1,0 +1,14 @@
+# Local dependencies and caches
+tools/godot-mcp/node_modules/
+tools/godot-mcp/.npm-cache/
+
+# Godot generated files
+.godot/
+/android/
+
+# Temporary review and verification files
+work/
+
+# Exported builds (keep the directory placeholder)
+builds/*
+!builds/.gitkeep

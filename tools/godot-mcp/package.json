@@ -1,0 +1,9 @@
+{
+  "name": "factory-game-godot-mcp-runtime",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Pinned local runtime for Coding-Solo/godot-mcp.",
+  "dependencies": {
+    "@coding-solo/godot-mcp": "0.1.1"
+  }
+}
