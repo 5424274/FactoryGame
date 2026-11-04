@@ -8,17 +8,22 @@ signal hovered_cell_changed(cell: Vector2i)
 const CELL_SIZE := 32
 const GRID_SIZE := Vector2i(160, 90)
 const MAP_SIZE := Vector2(GRID_SIZE * CELL_SIZE)
-const MAJOR_GRID_INTERVAL := 8
-
 # 用于表示鼠标当前不在地图有效范围内。
 const INVALID_CELL := Vector2i(-1, -1)
+const IRON_TEXTURE_PATH := "res://assets/textures/terrain/iron_block.png"
+
+@export var iron_texture: Texture2D
 
 var hovered_cell: Vector2i = INVALID_CELL
-var _font: Font
+var _world
+
+
+func configure(world) -> void:
+	_world = world
 
 
 func _ready() -> void:
-	_font = ThemeDB.fallback_font
+	_load_iron_texture_if_needed()
 	queue_redraw()
 
 
@@ -66,45 +71,49 @@ func snap_world_to_cell_center(world_position: Vector2) -> Vector2:
 	return cell_to_world(cell)
 
 
+func get_terrain_id(cell: Vector2i) -> StringName:
+	return _world.terrain.get_terrain(cell) if _world != null else &"base:ground"
+
+
+func is_iron_cell(cell: Vector2i) -> bool:
+	return _world != null and _world.terrain.is_iron(cell)
+
+
+func get_iron_cell_count() -> int:
+	return _world.terrain.get_iron_cell_count() if _world != null else 0
+
+
+func _load_iron_texture_if_needed() -> void:
+	if iron_texture != null:
+		return
+	if ResourceLoader.exists(IRON_TEXTURE_PATH, "Texture2D"):
+		iron_texture = load(IRON_TEXTURE_PATH) as Texture2D
+		return
+	# 源文件尚未生成 Godot 导入缓存时也能显示；这只属于表现层，不进入 TerrainState。
+	var image := Image.load_from_file(IRON_TEXTURE_PATH)
+	if image == null or image.is_empty():
+		push_error("无法读取铁矿贴图：%s" % IRON_TEXTURE_PATH)
+		return
+	iron_texture = ImageTexture.create_from_image(image)
+
+
 func _draw() -> void:
 	# 绘制只属于世界表现层，不改变网格的逻辑占用状态。
-	draw_rect(Rect2(Vector2.ZERO, MAP_SIZE), Color("18232e"), true)
-	_draw_grid_lines()
-	_draw_region_markers()
+	# 浅灰地面保持中性，便于后续辨认建筑、传送带和放置提示。
+	draw_rect(Rect2(Vector2.ZERO, MAP_SIZE), Color("d6d8dc"), true)
+	_draw_terrain()
 	draw_rect(Rect2(Vector2.ZERO, MAP_SIZE), Color("83d6ff"), false, 6.0)
 	_draw_hovered_cell()
 
 
-func _draw_grid_lines() -> void:
-	for column in range(GRID_SIZE.x + 1):
-		var x := float(column * CELL_SIZE)
-		var is_major := column % MAJOR_GRID_INTERVAL == 0
-		var color := Color("52778d") if is_major else Color("2a3c48")
-		var width := 2.0 if is_major else 1.0
-		draw_line(Vector2(x, 0.0), Vector2(x, MAP_SIZE.y), color, width)
-
-	for row in range(GRID_SIZE.y + 1):
-		var y := float(row * CELL_SIZE)
-		var is_major := row % MAJOR_GRID_INTERVAL == 0
-		var color := Color("52778d") if is_major else Color("2a3c48")
-		var width := 2.0 if is_major else 1.0
-		draw_line(Vector2(0.0, y), Vector2(MAP_SIZE.x, y), color, width)
-
-
-func _draw_region_markers() -> void:
-	for row in range(0, GRID_SIZE.y, MAJOR_GRID_INTERVAL * 2):
-		for column in range(0, GRID_SIZE.x, MAJOR_GRID_INTERVAL * 2):
-			var marker_position := Vector2(column * CELL_SIZE + 12, row * CELL_SIZE + 28)
-			var marker_text := "格 (%d, %d)" % [column, row]
-			draw_string(
-				_font,
-				marker_position,
-				marker_text,
-				HORIZONTAL_ALIGNMENT_LEFT,
-				-1.0,
-				18,
-				Color("b9e7ff")
-			)
+func _draw_terrain() -> void:
+	if iron_texture == null:
+		return
+	# 贴图只是 TerrainState 的表现结果，网格线随后覆盖在贴图上保持格子清晰。
+	if _world == null:
+		return
+	for cell in _world.terrain.get_iron_cells():
+		draw_texture_rect(iron_texture, get_cell_rect(cell), false)
 
 
 func _draw_hovered_cell() -> void:
@@ -114,12 +123,3 @@ func _draw_hovered_cell() -> void:
 	var cell_rect := get_cell_rect(hovered_cell)
 	draw_rect(cell_rect, Color(0.25, 0.82, 1.0, 0.28), true)
 	draw_rect(cell_rect, Color("f2fbff"), false, 2.0)
-	draw_string(
-		_font,
-		cell_rect.position + Vector2(4.0, -6.0),
-		"(%d, %d)" % [hovered_cell.x, hovered_cell.y],
-		HORIZONTAL_ALIGNMENT_LEFT,
-		-1.0,
-		16,
-		Color("ffffff")
-	)

@@ -1,11 +1,15 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/world/world_grid.gd" id="1_map"]
 [ext_resource type="Script" path="res://scripts/world/camera_controller.gd" id="2_camera"]
 [ext_resource type="Script" path="res://scripts/placement/building_placement.gd" id="3_placement"]
-[ext_resource type="Texture2D" path="res://assets/textures/machines/test_building.png" id="4_building"]
+[ext_resource type="Script" path="res://scripts/placement/machine_selection_menu.gd" id="5_menu"]
+[ext_resource type="Script" path="res://scripts/simulation/factory_runtime.gd" id="6_runtime"]
+[ext_resource type="Script" path="res://scripts/main/main_controller.gd" id="7_main"]
+[ext_resource type="Script" path="res://scripts/presentation/entity_view_synchronizer.gd" id="8_views"]
 
 [node name="Main" type="Node2D"]
+script = ExtResource("7_main")
 
 [node name="WorldGrid" type="Node2D" parent="."]
 script = ExtResource("1_map")
@@ -13,12 +17,19 @@ script = ExtResource("1_map")
 [node name="Buildings" type="Node2D" parent="."]
 z_index = 1
 
+[node name="Items" type="Node2D" parent="."]
+z_index = 3
+
 [node name="BuildingPlacement" type="Node2D" parent="."]
 z_index = 2
 script = ExtResource("3_placement")
 grid_path = NodePath("../WorldGrid")
-buildings_path = NodePath("../Buildings")
-building_texture = ExtResource("4_building")
+
+[node name="EntityViewSynchronizer" type="Node2D" parent="."]
+script = ExtResource("8_views")
+
+[node name="FactoryRuntime" type="Node2D" parent="."]
+script = ExtResource("6_runtime")
 
 [node name="Camera" type="Camera2D" parent="."]
 position = Vector2(640, 360)
@@ -31,8 +42,8 @@ script = ExtResource("2_camera")
 [node name="HelpPanel" type="ColorRect" parent="Interface"]
 offset_left = 20.0
 offset_top = 20.0
-offset_right = 590.0
-offset_bottom = 236.0
+offset_right = 660.0
+offset_bottom = 284.0
 color = Color(0.027, 0.055, 0.075, 0.88)
 mouse_filter = 2
 
@@ -49,5 +60,66 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_colors/font_color = Color(0.83, 0.94, 1, 1)
 theme_override_font_sizes/font_size = 22
-text = "W / A / S / D：移动视角\n按住鼠标中键：拖动地图；滚轮：缩放\n左键：放置 1×1 测试建筑（可连续放置）\n右键 / Esc：取消放置；B：重新进入放置模式\n绿色预览：可放置；红色预览：网格已占用\n32 × 32 像素网格，共 160 × 90 格"
+text = "W / A / S / D：移动；中键拖动；滚轮缩放\n菜单可选测试建筑、采矿机和传送带；R 顺时针旋转\n采矿机：2×2，覆盖至少 1 格铁矿即可放置\n覆盖 3/2/1 格时效率为 75%/40%/15%\n传送带接受除输出侧外的三面输入，每格最多滞留 2 件\n左键连续放置；右键 / Esc 取消；B 继续放置"
 vertical_alignment = 1
+
+[node name="MachineMenu" type="PanelContainer" parent="Interface"]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -400.0
+offset_top = -104.0
+offset_right = 400.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 0
+script = ExtResource("5_menu")
+placement_path = NodePath("../../BuildingPlacement")
+
+[node name="Margin" type="MarginContainer" parent="Interface/MachineMenu"]
+layout_mode = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 10
+
+[node name="MenuRow" type="HBoxContainer" parent="Interface/MachineMenu/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="Interface/MachineMenu/Margin/MenuRow"]
+layout_mode = 2
+text = "建筑"
+vertical_alignment = 1
+
+[node name="Size1Button" type="Button" parent="Interface/MachineMenu/Margin/MenuRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(120, 48)
+layout_mode = 2
+text = "1 × 1"
+
+[node name="Size2Button" type="Button" parent="Interface/MachineMenu/Margin/MenuRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(120, 48)
+layout_mode = 2
+text = "2 × 2"
+
+[node name="Size3Button" type="Button" parent="Interface/MachineMenu/Margin/MenuRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(120, 48)
+layout_mode = 2
+text = "3 × 3"
+
+[node name="MinerButton" type="Button" parent="Interface/MachineMenu/Margin/MenuRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(130, 48)
+layout_mode = 2
+text = "采矿机 2×2"
+
+[node name="ConveyorButton" type="Button" parent="Interface/MachineMenu/Margin/MenuRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(130, 48)
+layout_mode = 2
+text = "传送带 ↓"

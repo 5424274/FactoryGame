@@ -1,10 +1,18 @@
 extends SceneTree
 
 const WorldGridScript := preload("res://scripts/world/world_grid.gd")
+const WorldStateScript := preload("res://scripts/simulation/core/world_state.gd")
 
 
 func _init() -> void:
+	call_deferred("_run_tests")
+
+
+func _run_tests() -> void:
 	var grid := WorldGridScript.new()
+	var world := WorldStateScript.new()
+	world.initialize_terrain(Vector2i(160, 90), 20261104, 18, 4, 9)
+	grid.configure(world)
 	root.add_child(grid)
 
 	_assert_equal(grid.world_to_cell(Vector2(0.0, 0.0)), Vector2i(0, 0), "origin cell")
@@ -17,8 +25,9 @@ func _init() -> void:
 	_assert_true(grid.is_cell_in_bounds(Vector2i(159, 89)), "maximum bound")
 	_assert_false(grid.is_cell_in_bounds(Vector2i(160, 89)), "outside x bound")
 	_assert_false(grid.is_cell_in_bounds(Vector2i(159, 90)), "outside y bound")
+	_assert_true(grid.get_iron_cell_count() > 0, "terrain generation creates iron")
 
-	print("WorldGrid tests passed: 10")
+	print("WorldGrid tests passed: 11")
 	quit(0)
 
 
